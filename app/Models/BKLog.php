@@ -9,6 +9,7 @@ class BKLog extends Model
     protected $table = 'bk_logs';
 
     protected $fillable = [
+        'client_id',
         'nomor_absen',
         'nama_murid',
         'kelas',
@@ -18,5 +19,9 @@ class BKLog extends Model
         'minggu_ke',
         'bulan'
     ];
-}
 
+    public function client()
+    {
+        return $this->belongsTo(Client::class);
+    }
+}

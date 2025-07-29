@@ -15,27 +15,21 @@ class BKLogController extends Controller
 {
     public function index(Request $request)
     {
+        $clientId = session('client_id'); // ⬅️ Ambil dari session login
+
         $logs = BKLog::query()
-            ->when($request->nama, function ($query) use ($request) {
-                $query->where('nama_murid', 'like', '%' . $request->nama . '%');
-            })
-            ->when($request->minggu, function ($query) use ($request) {
-                $query->where('minggu_ke', $request->minggu);
-            })
-            ->when($request->bulan, function ($query) use ($request) {
-                $query->where('bulan', $request->bulan);
-            })
+            ->where('client_id', $clientId) // ⬅️ Tambahkan filter client_id
+            ->when($request->nama, fn($query) => $query->where('nama_murid', 'like', '%' . $request->nama . '%'))
+            ->when($request->minggu, fn($query) => $query->where('minggu_ke', $request->minggu))
+            ->when($request->bulan, fn($query) => $query->where('bulan', $request->bulan))
             ->latest()
             ->get();
 
-        $totalPoin = null;
-
-        if ($request->filled('nama')) {
-            $totalPoin = $logs->sum('poin');
-        }
+        $totalPoin = $request->filled('nama') ? $logs->sum('poin') : null;
 
         return view('bk.index', compact('logs', 'totalPoin'));
     }
+
 
 
     public function store(Request $request)
@@ -49,16 +43,19 @@ class BKLogController extends Controller
         ]);
 
         $tanggal = now();
-        Carbon::setLocale('id');
-
-        // Hitung minggu ke berdasarkan tanggal dalam bulan
         $minggu_ke = ceil($tanggal->day / 7);
+        $bulan = now()->locale('id')->isoFormat('MMMM');
 
         BKLog::create([
-            ...$request->only(['nomor_absen', 'nama_murid', 'kelas', 'catatan', 'poin']),
-            'tanggal_input' => now(),
+            'client_id' => session('client_id'), // ⬅️ WAJIB agar data tersimpan sesuai client
+            'nomor_absen' => $request->nomor_absen,
+            'nama_murid' => $request->nama_murid,
+            'kelas' => $request->kelas,
+            'catatan' => $request->catatan,
+            'poin' => $request->poin,
+            'tanggal_input' => $tanggal,
             'minggu_ke' => $minggu_ke,
-            'bulan' => now()->format('F'),
+            'bulan' => $bulan,
         ]);
 
         return back()->with('success', 'Data berhasil disimpan!');
@@ -72,7 +69,10 @@ class BKLogController extends Controller
 
     public function exportPDF(Request $request)
     {
+        $clientId = session('client_id');
+
         $logs = BKLog::query()
+            ->where('client_id', $clientId)
             ->when($request->nama, fn($q) => $q->where('nama_murid', 'like', '%' . $request->nama . '%'))
             ->when($request->minggu, fn($q) => $q->where('minggu_ke', $request->minggu))
             ->when($request->bulan, fn($q) => $q->where('bulan', $request->bulan))

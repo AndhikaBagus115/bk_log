@@ -35,6 +35,13 @@
     <div class="container">
         <h3 class="text-center mb-4">CATATAN GURU BK</h3>
 
+        <div class="d-flex justify-content-end mb-3">
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="btn btn-outline-danger">Logout</button>
+            </form>
+        </div>
+
         {{-- Success Message --}}
         @if (session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>
@@ -54,19 +61,19 @@
                 <select name="bulan" class="form-select">
                     <option value="">Bulan</option>
                     @foreach ([
-                                'January' => 'Januari',
-                                'February' => 'Februari',
-                                'March' => 'Maret',
-                                'April' => 'April',
-                                'May' => 'Mei',
-                                'June' => 'Juni',
-                                'July' => 'Juli',
-                                'August' => 'Agustus',
-                                'September' => 'September',
-                                'October' => 'Oktober',
-                                'November' => 'November',
-                                'December' => 'Desember',
-                            ] as $en => $id)
+        'January' => 'Januari',
+        'February' => 'Februari',
+        'March' => 'Maret',
+        'April' => 'April',
+        'May' => 'Mei',
+        'June' => 'Juni',
+        'July' => 'Juli',
+        'August' => 'Agustus',
+        'September' => 'September',
+        'October' => 'Oktober',
+        'November' => 'November',
+        'December' => 'Desember',
+    ] as $en => $id)
                         <option value="{{ $en }}" {{ request('bulan') == $en ? 'selected' : '' }}>
                             {{ $id }}
                         </option>
