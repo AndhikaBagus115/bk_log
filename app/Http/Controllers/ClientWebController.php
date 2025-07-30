@@ -15,20 +15,23 @@ class ClientWebController extends Controller
 
     public function login(Request $request)
     {
-        $request->validate([
-            'username' => 'required',
-            'password' => 'required'
+        $credentials = $request->validate([
+            'username' => ['required', 'string'],
+            'password' => ['required', 'string'],
         ]);
 
-        $client = Client::where('username', $request->username)->first();
+        $client = Client::where('username', $credentials['username'])->first();
 
-        if ($client && Hash::check($request->password, $client->password)) {
+        if ($client && Hash::check($credentials['password'], $client->password)) {
             session(['client_id' => $client->id]);
             return redirect('/bk')->with('success', 'Login berhasil');
         }
 
-        return back()->withErrors(['login' => 'Username atau password salah']);
+        return back()
+            ->withErrors(['login' => 'Username atau password salah'])
+            ->withInput($request->only('username'));
     }
+
 
     public function logout()
     {
