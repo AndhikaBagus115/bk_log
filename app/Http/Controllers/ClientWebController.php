@@ -3,7 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Client;
+use App\Models\Client; // Pastikan model Client ada
+use Illuminate\Support\Facades\Auth; // <-- PENTING: Tambahkan ini
 use Illuminate\Support\Facades\Hash;
 
 class ClientWebController extends Controller
@@ -22,9 +23,20 @@ class ClientWebController extends Controller
 
         $client = Client::where('username', $credentials['username'])->first();
 
+        // Cek kredensial seperti sebelumnya
         if ($client && Hash::check($credentials['password'], $client->password)) {
-            session(['client_id' => $client->id]);
-            return redirect('/bk')->with('success', 'Login berhasil');
+
+            // GANTI BAGIAN INI
+            // session(['client_id' => $client->id]); // <-- Hapus baris ini
+
+            // GUNAKAN INI untuk membuat sesi login yang dikenali Laravel
+            Auth::guard('client')->login($client);
+
+            // Regenerasi session untuk keamanan
+            $request->session()->regenerate();
+
+            // Arahkan ke tujuan yang diingat sebelumnya
+            return redirect()->intended(route('bk.index'))->with('success', 'Login berhasil');
         }
 
         return back()
@@ -32,10 +44,17 @@ class ClientWebController extends Controller
             ->withInput($request->only('username'));
     }
 
-
-    public function logout()
+    public function logout(Request $request)
     {
-        session()->forget('client_id');
+        // GANTI BAGIAN INI
+        // session()->forget('client_id'); // <-- Hapus baris ini
+
+        // GUNAKAN INI untuk logout secara resmi
+        Auth::guard('client')->logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
         return redirect('/login')->with('success', 'Berhasil logout');
     }
 }

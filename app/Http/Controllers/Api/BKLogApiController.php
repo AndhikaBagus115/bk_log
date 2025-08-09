@@ -11,21 +11,21 @@ class BKLogApiController extends Controller
 {
     public function store(Request $request)
     {
-
         $request->validate([
             'nomor_absen' => 'required|integer',
             'nama_murid' => 'required|string',
             'kelas' => 'required|string',
             'catatan' => 'required|string',
-            'poin' => 'required|integer',
+            'poin' => 'nullable|integer',
         ]);
 
-        $tanggal = Carbon::now();
-        $minggu_ke = ceil($tanggal->day / 7);
-        $bulan = $tanggal->locale('id')->isoFormat('MMMM');
+        $clientId = $request->input('client_id');
+        $tanggal = Carbon::now()->toDateString(); // YYYY-MM-DD
+        $minggu_ke = ceil(Carbon::now()->day / 7);
+        $bulan = Carbon::now()->locale('id')->isoFormat('MMMM');
 
         $bk = BKLog::create([
-            'client_id' => $request->input('client_id'),
+            'client_id' => $clientId,
             'nomor_absen' => $request->nomor_absen,
             'nama_murid' => $request->nama_murid,
             'kelas' => $request->kelas,
@@ -41,6 +41,7 @@ class BKLogApiController extends Controller
             'data' => $bk
         ], 201);
     }
+
 
     public function index(Request $request)
     {

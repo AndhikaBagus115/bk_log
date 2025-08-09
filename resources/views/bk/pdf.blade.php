@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="id">
 
@@ -8,7 +7,8 @@
         body {
             font-family: DejaVu Sans;
             font-size: 12px;
-            margin: 0;
+            margin: 0 0 120px 0;
+
         }
 
         .header {
@@ -37,6 +37,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 10px;
+            page-break-inside: avoid;
         }
 
         .table,
@@ -51,13 +52,31 @@
             text-align: center;
         }
 
+        .table tr {
+            page-break-inside: avoid;
+            page-break-after: auto;
+        }
+
         .footer {
             position: fixed;
-            bottom: 10px;
+            bottom: 5px;
             width: 100%;
             font-style: italic;
             font-size: 10px;
             text-align: center;
+        }
+
+        .signature {
+            position: fixed;
+            bottom: 60px;
+            right: 50px;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        @page {
+            margin: 20px 20px 100px 20px;
+            /* top, right, bottom, left */
         }
     </style>
 </head>
@@ -66,8 +85,11 @@
 
     <table width="100%" style="margin-bottom: 10px;">
         <tr>
-            <td width="80">
-                <img src="{{ $logoBase64 }}" width="70" alt="Logo Sekolah">
+            <td style="width: 80px; padding: 0; text-align: center;">
+                {{-- Tampilkan logo hanya jika variabelnya ada --}}
+                @if (isset($logoBase64) && $logoBase64)
+                    <img src="{{ $logoBase64 }}" width="70" style="display: block; margin: auto;">
+                @endif
             </td>
             <td>
                 <div style="font-size: 16px; font-weight: bold;">MTS SUNAN GUNUNG JATI</div>
@@ -113,6 +135,14 @@
             </tr>
         </tbody>
     </table>
+
+    <div class="signature">
+        Kediri, {{ now()->format('d F Y') }}<br>
+        Guru BK<br><br><br><br>
+        <strong><u>Moh. Edi Kurniawan</u></strong><br>
+        NIP: 1234567890
+    </div>
+
 
     <!-- FOOTER -->
     <div class="footer">

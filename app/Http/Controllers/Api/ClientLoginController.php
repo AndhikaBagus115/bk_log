@@ -19,15 +19,19 @@ class ClientLoginController extends Controller
         $client = Client::where('username', $request->username)->first();
 
         if (!$client || !Hash::check($request->password, $client->password)) {
-            return response()->json(['message' => 'Login gagal'], 401);
+            return response()->json([
+                'success' => false,
+                'message' => 'Username atau Password salah'
+            ], 401);
         }
 
         return response()->json([
+            'success' => true, 
             'message' => 'Login berhasil',
-            'data' => [
-                'token' => $client->api_token,
+            'data'    => [
+                'token'     => $client->api_token,
                 'client_id' => $client->id
             ]
-        ]);
+        ], 200);
     }
 }

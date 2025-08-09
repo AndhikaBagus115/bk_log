@@ -4,8 +4,8 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Client;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class ClientSeeder extends Seeder
 {
@@ -19,9 +19,9 @@ class ClientSeeder extends Seeder
                 'api_token' => Str::random(60),
             ],
             [
-                'nama' => 'MTS Al Huda',
-                'username' => 'alhuda',
-                'password' => Hash::make('alhuda123'),
+                'nama' => 'MTS Suguja',
+                'username' => 'sugujagurah',
+                'password' => Hash::make('suguja2025'),
                 'api_token' => Str::random(60),
             ],
             [
@@ -32,9 +32,8 @@ class ClientSeeder extends Seeder
             ],
         ];
 
-        foreach ($clients as $client) {
-            Client::create($client);
+        foreach ($clients as $clientData) {
+            Client::create($clientData);
         }
     }
-
 }

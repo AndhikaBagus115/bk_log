@@ -11,10 +11,10 @@ Route::get('/user', function (Request $request) {
 
 
 Route::middleware(ClientMiddleware::class)->group(function () {
-    Route::post('/bk', [BKLogApiController::class, 'store']);
-    Route::get('/bk', [BKLogApiController::class, 'index']);
-    Route::put('/bk/{id}', [BKLogApiController::class, 'update']);
-    Route::delete('/bk/{id}', [BKLogApiController::class, 'destroy']);
+    Route::post('/bk-logs', [BKLogApiController::class, 'store']);
+    Route::get('/bk-logs', [BKLogApiController::class, 'index']);
+    Route::put('/bk-logs/{id}', [BKLogApiController::class, 'update']);
+    Route::delete('/bk-logs/{id}', [BKLogApiController::class, 'destroy']);
 });
 
 Route::post('/login-client', [\App\Http\Controllers\Api\ClientLoginController::class, 'login']);
