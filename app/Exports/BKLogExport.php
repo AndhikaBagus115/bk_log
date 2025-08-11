@@ -14,8 +14,10 @@ use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use Maatwebsite\Excel\Concerns\WithColumnFormatting;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
-class BKLogExport implements FromCollection, WithHeadings, WithEvents, WithDrawings, ShouldAutoSize, WithCustomStartCell
+class BKLogExport implements FromCollection, WithHeadings, WithEvents, WithDrawings, ShouldAutoSize, WithCustomStartCell, WithColumnFormatting
 {
     protected $request;
     protected $client;
@@ -36,23 +38,37 @@ class BKLogExport implements FromCollection, WithHeadings, WithEvents, WithDrawi
     }
 
     /**
+     * Mengatur format spesifik untuk kolom tertentu.
+     */
+    public function columnFormats(): array
+    {
+        return [
+            // Paksa kolom G (Poin) untuk selalu menampilkan angka, termasuk 0.
+            'G' => NumberFormat::FORMAT_NUMBER,
+        ];
+    }
+
+    /**
      * Mengambil data untuk diekspor.
      */
     public function collection()
     {
         $query = BKLog::where('client_id', $this->client->id);
 
-        if ($this->request->filled('tanggal_mulai')) {
-            $query->whereDate('tanggal_input', '>=', $this->request->tanggal_mulai);
+        if ($this->request->filled('minggu')) {
+            $query->where('minggu', $this->request->minggu);
         }
 
-        if ($this->request->filled('tanggal_selesai')) {
-            $query->whereDate('tanggal_input', '<=', $this->request->tanggal_selesai);
+        if ($this->request->filled('bulan')) {
+            $query->whereMonth('tanggal_input', $this->request->bulan);
         }
 
-        $logs = $query->orderBy('tanggal_input', 'asc')->get();
+        if ($this->request->filled('nama')) { // <-- disesuaikan dengan nama field di form
+            $query->where('nama_murid', 'like', '%' . $this->request->nama . '%');
+        }
 
-        // Menggunakan map untuk memformat data sesuai kebutuhan
+        $logs = $query->orderBy('tanggal_input', 'DESC')->get();
+
         return $logs->map(function ($log, $index) {
             return [
                 'No'         => $index + 1,
@@ -61,10 +77,12 @@ class BKLogExport implements FromCollection, WithHeadings, WithEvents, WithDrawi
                 'No Absen'   => $log->nomor_absen,
                 'Kelas'      => $log->kelas,
                 'Catatan'    => $log->catatan,
-                'Poin'       => $log->poin,
+                'Poin'       => ($log->poin === null || $log->poin === '') ? 0 : (int) $log->poin,
             ];
         });
     }
+
+
 
     /**
      * Mendefinisikan header untuk tabel.
@@ -165,6 +183,15 @@ class BKLogExport implements FromCollection, WithHeadings, WithEvents, WithDrawi
                     $sheet->getStyle("A{$totalRow}:G{$totalRow}")->getFont()->setBold(true);
                     $sheet->getStyle("A{$totalRow}:G{$totalRow}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
                     $sheet->getStyle("A{$totalRow}:G{$totalRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+                    // Di AfterSheet sebelum tanda tangan
+                    for ($row = 10; $row <= $lastRow; $row++) {
+                        $cell = 'G' . $row;
+                        if ($sheet->getCell($cell)->getValue() === null || $sheet->getCell($cell)->getValue() === '') {
+                            $sheet->setCellValue($cell, 0);
+                        }
+                    }
+
 
                     // --- TANDA TANGAN ---
                     $signatureRow = $totalRow + 4;

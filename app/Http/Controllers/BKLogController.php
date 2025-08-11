@@ -20,7 +20,6 @@ class BKLogController extends Controller
         $clientId = Auth::guard('client')->id();
         $perPage = $request->input('per_page', 10);
 
-        // ... (kode query Anda tidak berubah) ...
         $query = BKLog::query()
             ->where('client_id', $clientId)
             ->when($request->nama, function ($q, $nama) {
@@ -39,7 +38,7 @@ class BKLogController extends Controller
             $totalPoin = (clone $query)->sum('poin');
         }
 
-        $logs = $query->latest('tanggal_input')->paginate($perPage)->appends($request->query());
+        $logs = $query->orderBy('id', 'desc')->paginate($perPage)->appends($request->query());
 
         // Ambil data client yang sedang login
         $client = Auth::guard('client')->user();
@@ -109,6 +108,7 @@ class BKLogController extends Controller
                 $monthNumber = date('m', strtotime($bulan));
                 return $q->whereMonth('tanggal_input', $monthNumber);
             })
+            ->orderBy('id', 'desc')
             ->get();
 
         $totalPoin = $logs->sum('poin');
