@@ -6,7 +6,7 @@
     <style>
         @page {
             /* Memberi ruang di bawah untuk footer */
-            margin: 100px 25px 150px 25px;
+            margin: 145px 25px 150px 25px;
         }
 
         body {
@@ -17,7 +17,7 @@
 
         header {
             position: fixed;
-            top: -80px; /* Tarik header ke area margin atas */
+            top: -140px; /* Tarik header ke area margin atas */
             left: 0px;
             right: 0px;
             height: 90px;
@@ -41,7 +41,6 @@
         .table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
 
         }
         .table th, .table td {
@@ -96,6 +95,7 @@
                 </td>
             </tr>
         </table>
+        <h3 class="text-center" style="margin-top: 20px;">Laporan Data Bimbingan Konseling (BK)</h3>
     </header>
 
     <footer>
@@ -115,7 +115,6 @@
     </footer>
 
     <main>
-        <h3 class="text-center" style="margin-top: 20px;">Laporan Data Bimbingan Konseling (BK)</h3>
 
         <table class="table">
             <thead>
@@ -125,7 +124,7 @@
                     <th>Nama Murid</th>
                     <th>No Absen</th>
                     <th>Kelas</th>
-                    <th>Catatan Masalah</th>
+                    <th>Catatan</th>
                     <th>Poin</th>
                 </tr>
             </thead>

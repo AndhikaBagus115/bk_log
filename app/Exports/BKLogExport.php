@@ -95,7 +95,7 @@ class BKLogExport implements FromCollection, WithHeadings, WithEvents, WithDrawi
             'Nama Murid',
             'No Absen',
             'Kelas',
-            'Catatan Masalah',
+            'Catatan',
             'Poin'
         ];
     }
