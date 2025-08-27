@@ -6,94 +6,102 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\BKLog;
 use Carbon\Carbon;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Log;
 
 class BKLogApiController extends Controller
 {
     public function store(Request $request)
     {
-        $request->validate([
-            'nomor_absen' => 'required|integer',
-            'nama_murid' => 'required|string',
-            'kelas' => 'required|string',
-            'catatan' => 'required|string',
-            'poin' => 'nullable|integer',
-        ]);
+        try {
+            $validatedData = $request->validate([
+                'nomor_absen' => 'required|integer',
+                'nama_murid' => 'required|string',
+                'kelas' => 'required|string',
+                'catatan' => 'required|string',
+                'poin' => 'nullable|integer',
+                'tindak_lanjut' => 'nullable|string'
+            ]);
 
-        $clientId = $request->input('client_id');
-        $tanggal = Carbon::now()->toDateString(); // YYYY-MM-DD
-        $minggu_ke = ceil(Carbon::now()->day / 7);
-        $bulan = Carbon::now()->locale('id')->isoFormat('MMMM');
+            $clientId = $request->input('client_id');
 
-        $bk = BKLog::create([
-            'client_id' => $clientId,
-            'nomor_absen' => $request->nomor_absen,
-            'nama_murid' => $request->nama_murid,
-            'kelas' => $request->kelas,
-            'catatan' => $request->catatan,
-            'poin' => $request->poin,
-            'tanggal_input' => $tanggal,
-            'minggu_ke' => $minggu_ke,
-            'bulan' => $bulan,
-        ]);
+            $bk = BKLog::create(array_merge($validatedData, [
+                'client_id' => $clientId,
+                'tanggal_input' => Carbon::now()->toDateString(),
+                'minggu_ke' => ceil(Carbon::now()->day / 7),
+                'bulan' => Carbon::now()->locale('id')->isoFormat('MMMM'),
+            ]));
 
-        return response()->json([
-            'message' => 'Data berhasil disimpan.',
-            'data' => $bk
-        ], 201);
+            return response()->json([
+                'success' => true,
+                'message' => 'Data berhasil disimpan.',
+                'data' => $bk
+            ], 201);
+
+        } catch (ValidationException $e) {
+            return response()->json(['success' => false, 'message' => 'Data tidak valid', 'errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            Log::error('API Store Error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Terjadi kesalahan pada server.'], 500);
+        }
     }
-
 
     public function index(Request $request)
     {
         $clientId = $request->input('client_id');
-
         $logs = BKLog::where('client_id', $clientId)->latest()->get();
 
         return response()->json([
+            'success' => true,
             'message' => 'Data berhasil diambil',
             'data' => $logs
         ]);
     }
 
-
     public function update(Request $request, $id)
     {
-        $validated = $request->validate([
-            'nomor_absen' => 'required|integer',
-            'nama_murid' => 'required|string',
-            'kelas' => 'required|string',
-            'catatan' => 'required|string',
-            'poin' => 'required|integer',
-        ]);
+        try {
+            // PERBAIKAN: Aturan validasi disamakan dengan store()
+            $validatedData = $request->validate([
+                'nomor_absen' => 'required|integer',
+                'nama_murid' => 'required|string',
+                'kelas' => 'required|string',
+                'catatan' => 'required|string',
+                'poin' => 'nullable|integer',
+                'tindak_lanjut' => 'nullable|string'
+            ]);
 
-        // Ambil client_id dari middleware
-        $clientId = $request->input('client_id');
+            $clientId = $request->input('client_id');
+            $bk = BKLog::where('id', $id)->where('client_id', $clientId)->firstOrFail();
 
-        $bk = BKLog::where('id', $id)->where('client_id', $clientId)->first();
+            $bk->update($validatedData);
 
-        if (!$bk) {
-            return response()->json(['message' => 'Data tidak ditemukan atau tidak diizinkan.'], 404);
+            return response()->json(['success' => true, 'message' => 'Data berhasil diperbarui.']);
+
+        } catch (ValidationException $e) {
+            return response()->json(['success' => false, 'message' => 'Data tidak valid', 'errors' => $e->errors()], 422);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['success' => false, 'message' => 'Data tidak ditemukan atau tidak diizinkan.'], 404);
+        } catch (\Exception $e) {
+            Log::error('API Update Error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Terjadi kesalahan pada server.'], 500);
         }
-
-        $bk->update($validated);
-
-        return response()->json(['message' => 'Data berhasil diperbarui.']);
     }
-
 
     public function destroy(Request $request, $id)
     {
-        // Ambil client_id dari middleware
-        $clientId = $request->input('client_id');
+        try {
+            $clientId = $request->input('client_id');
+            $bk = BKLog::where('id', $id)->where('client_id', $clientId)->firstOrFail();
+            $bk->delete();
 
-        $bk = BKLog::where('id', $id)->where('client_id', $clientId)->first();
+            return response()->json(['success' => true, 'message' => 'Data berhasil dihapus.']);
 
-        if (!$bk) {
-            return response()->json(['message' => 'Data tidak ditemukan atau tidak diizinkan.'], 404);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['success' => false, 'message' => 'Data tidak ditemukan atau tidak diizinkan.'], 404);
+        } catch (\Exception $e) {
+            Log::error('API Destroy Error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Terjadi kesalahan pada server.'], 500);
         }
-
-        $bk->delete();
-
-        return response()->json(['message' => 'Data berhasil dihapus.']);
     }
 }

@@ -78,6 +78,7 @@ class BKLogExport implements FromCollection, WithHeadings, WithEvents, WithDrawi
                 'Kelas'      => $log->kelas,
                 'Catatan'    => $log->catatan,
                 'Poin'       => ($log->poin === null || $log->poin === '') ? 0 : (int) $log->poin,
+                'Tindak Lanjut' => $log->tindak_lanjut ?? ' ',
             ];
         });
     }
@@ -96,7 +97,8 @@ class BKLogExport implements FromCollection, WithHeadings, WithEvents, WithDrawi
             'No Absen',
             'Kelas',
             'Catatan',
-            'Poin'
+            'Poin',
+            'Tindak Lanjut',
         ];
     }
 
@@ -131,7 +133,7 @@ class BKLogExport implements FromCollection, WithHeadings, WithEvents, WithDrawi
         return [
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
-                $lastColumn = 'G'; // Kolom terakhir
+                $lastColumn = 'H'; // Kolom terakhir
 
                 // --- KOP SURAT ---
                 // Merge untuk nama sekolah
@@ -172,35 +174,43 @@ class BKLogExport implements FromCollection, WithHeadings, WithEvents, WithDrawi
                 $sheet->getStyle('E10:E' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 $sheet->getStyle('G10:G' . $lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
+                for ($row = 10; $row <= $lastRow; $row++) { // Asumsi data dimulai dari baris 10
+                    $cell = 'G' . $row;
+                    if ($sheet->getCell($cell)->getValue() === null || $sheet->getCell($cell)->getValue() === '') {
+                        $sheet->setCellValue($cell, 0);
+                    }
+                }
+
                 // --- TOTAL POIN ---
                 $collection = $this->collection();
                 if ($collection->isNotEmpty()) {
                     $totalRow = $lastRow + 1;
+                    // Gabungkan 6 kolom pertama
                     $sheet->mergeCells("A{$totalRow}:F{$totalRow}");
-                    $sheet->setCellValue("A{$totalRow}", 'Total Poin Pelanggaran');
+                    $sheet->setCellValue("A{$totalRow}", 'Total Poin');
+                    $sheet->getStyle("A{$totalRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+                    // Letakkan nilai total di kolom G (Poin)
                     $sheet->setCellValue("G{$totalRow}", $collection->sum('Poin'));
 
-                    $sheet->getStyle("A{$totalRow}:G{$totalRow}")->getFont()->setBold(true);
-                    $sheet->getStyle("A{$totalRow}:G{$totalRow}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
-                    $sheet->getStyle("A{$totalRow}:G{$totalRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                    // Kosongkan sel di kolom H (Tindak Lanjut)
+                    $sheet->setCellValue("H{$totalRow}", '');
 
-                    // Di AfterSheet sebelum tanda tangan
-                    for ($row = 10; $row <= $lastRow; $row++) {
-                        $cell = 'G' . $row;
-                        if ($sheet->getCell($cell)->getValue() === null || $sheet->getCell($cell)->getValue() === '') {
-                            $sheet->setCellValue($cell, 0);
-                        }
-                    }
+                    // Beri border dan style
+                    $sheet->getStyle("A{$totalRow}:H{$totalRow}")->getFont()->setBold(true);
+                    $sheet->getStyle("A{$totalRow}:H{$totalRow}")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+                    $sheet->getStyle("G{$totalRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
 
 
                     // --- TANDA TANGAN ---
                     $signatureRow = $totalRow + 4;
-                    $sheet->setCellValue("F{$signatureRow}", 'Kediri, ' . now()->translatedFormat('d F Y'));
-                    $sheet->setCellValue("F" . ($signatureRow + 1), 'Guru BK');
-                    $sheet->getStyle("F" . ($signatureRow + 1))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-                    $sheet->setCellValue("F" . ($signatureRow + 5), 'Moh. Edi Kurniawan');
-                    $sheet->getStyle("F" . ($signatureRow + 5))->getFont()->setBold(true);
-                    $sheet->getStyle("F" . ($signatureRow + 5))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+                    $sheet->setCellValue("H{$signatureRow}", 'Kediri, ' . now()->translatedFormat('d F Y'));
+                    $sheet->getStyle("H{$signatureRow}")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+                    $sheet->setCellValue("H" . ($signatureRow + 1), 'Guru BK');
+                    $sheet->getStyle("H" . ($signatureRow + 1))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_RIGHT);
+                    $sheet->setCellValue("H" . ($signatureRow + 5), 'Moh. Edi Kurniawan');
+                    $sheet->getStyle("H" . ($signatureRow + 5))->getFont()->setBold(true);
+                    $sheet->getStyle("H" . ($signatureRow + 5))->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
                 }
             }
         ];

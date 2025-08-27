@@ -15,6 +15,7 @@ class BKLog extends Model
         'kelas',
         'catatan',
         'poin',
+        'tindak_lanjut',
         'tanggal_input',
         'minggu_ke',
         'bulan'

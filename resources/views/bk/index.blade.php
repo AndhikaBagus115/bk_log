@@ -242,6 +242,7 @@
                                 <th scope="col">Kelas</th>
                                 <th scope="col">Catatan</th>
                                 <th scope="col">Poin</th>
+                                <th scope="col">Tindak Lanjut</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -256,6 +257,7 @@
                                     <td>{{ $log->kelas }}</td>
                                     <td>{{ $log->catatan }}</td>
                                     <td>{{ $log->poin }}</td>
+                                    <td>{{ $log->tindak_lanjut ?? '-' }}</td>
                                 </tr>
                             @empty
                                 <tr>
