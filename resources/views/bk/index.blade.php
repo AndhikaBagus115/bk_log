@@ -261,7 +261,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="text-center py-5">
+                                    <td colspan="9" class="text-center py-5">
                                         <h5>Tidak ada data yang ditemukan.</h5>
                                         <p class="text-muted">Coba ubah atau hapus filter yang sedang aktif.</p>
                                     </td>

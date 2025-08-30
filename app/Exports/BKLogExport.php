@@ -67,7 +67,9 @@ class BKLogExport implements FromCollection, WithHeadings, WithEvents, WithDrawi
             $query->where('nama_murid', 'like', '%' . $this->request->nama . '%');
         }
 
-        $logs = $query->orderBy('tanggal_input', 'DESC')->get();
+        $logs = $query->orderBy('tanggal_input', 'DESC')
+            ->orderBy('id', 'DESC')
+            ->get();
 
         return $logs->map(function ($log, $index) {
             return [
